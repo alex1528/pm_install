@@ -23,7 +23,7 @@ class CheckHandler(tornado.web.RequestHandler):
         检查项包括:
         1). 是否可以根据 SN 获取到 ILO IP.
         2). 是否能够 获取到 ILO 的密码.
-        3). 是否能够设置第二块网卡支持 PXE 启动是否能够设置启动顺序.
+        3). 是否能够设置第二块网卡支持 PXE 启动.
         4). 是否能够设置启动顺序.
 
         """
@@ -83,7 +83,7 @@ class CreateHandler(tornado.web.RequestHandler):
         步骤包括:
         1). 根据 SN 获取到 ILO IP.
         2). 获取到 ILO 的密码.
-        3). 设置第二块网卡支持 PXE 启动是否能够设置启动顺序.
+        3). 设置第二块网卡支持 PXE 启动.
         4). 设置系统启动顺序.
         5). 设置系统 PXE 启动一次.
         6). 拷贝 pxelinux 配置文件.
@@ -253,6 +253,9 @@ class CreateManHandler(tornado.web.RequestHandler):
 class MessageHandler(tornado.web.RequestHandler):
     @decorator.authenticate_decorator
     def get(self):
+        """ 装机%post 阶段脚本来请求 sn 的 usage 以申请 hostname.
+
+        """
         sn = self.get_argument("sn", None)
         if sn is None:
             ret = {
@@ -278,6 +281,9 @@ class MessageHandler(tornado.web.RequestHandler):
 
     @decorator.authenticate_decorator
     def post(self):
+        """ 机器申请 hostname 和 ip 后传回本系统.
+
+        """        
         sn = self.get_argument("sn", None)
         hostname = self.get_argument("hostname", None)
         ip = self.get_argument("ip", None)
