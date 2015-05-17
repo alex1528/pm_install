@@ -166,7 +166,7 @@ class CreateHandler(tornado.web.RequestHandler):
             "task_id": task_id,
             "email": email
         }
-        redis_client_pm.lpush("queue:auto", queue_dict)
+        redis_client_pm.lpush("queue:create", queue_dict)
 
         _url = "http://nsstack.hy01.nosa.me/api/v1/pm/tasks/%s" % task_id
         ret = {
@@ -249,7 +249,7 @@ class CreateManHandler(tornado.web.RequestHandler):
             "task_id": task_id,
             "email": email
         }
-        redis_client_pm.lpush("queue:man", queue_dict)
+        redis_client_pm.lpush("queue:create_man", queue_dict)
 
         _url = "http://nsstack.hy01.nosa.me/api/v1/pm/tasks/%s" % task_id
         ret = {

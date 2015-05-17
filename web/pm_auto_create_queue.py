@@ -21,7 +21,7 @@ client = redisoj.generate(REDIS_DB_PM)
 def main():
     while 1:
         try:
-            m = client.brpop("queue:auto")
+            m = client.brpop("queue:create")
             m = eval(m[1])
             install_lists = m["install_lists"]
             task_id = m["task_id"]            
