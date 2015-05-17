@@ -15,9 +15,6 @@ from libs import assetapi, log
 from web.const import ASSET_SERVER_QUERY, ASSET_SERVER_MODIFY
 
 
-logger = log.get_logger("pm auto server")
-
-
 def get(srckey, value, dstkey=None):
     data_dict = {srckey: value}
     _object = assetapi.Ldapapi()
