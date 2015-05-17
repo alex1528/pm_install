@@ -180,11 +180,11 @@ class CreateHandler(tornado.web.RequestHandler):
 class CreateManHandler(tornado.web.RequestHandler):
     @decorator.authenticate_decorator
     def post(self):
-        """ 手动安装物理机, 需要机房协助.
+        """ 手动安装物理机, 需要部分手动操作.
 
         步骤包括:
         1). 拷贝默认 pxelinux 配置文件.
-        2). 要求机房人员重启机器, 按 F12 进入 PXE 模式, 
+        2). 手动重启机器, 按 F12 进入 PXE 模式, 
             并选择第二块网卡, 看到 boot 界面直接回车.
         3). 等待安装完成.
         4). 删除默认 pxelinux 配置文件.
