@@ -230,7 +230,7 @@ class CreateManHandler(tornado.web.RequestHandler):
     
         # 首先检查是否有其他 _type 和 version 的机器正在安装, 如果有,
         # 退出; 如果没有, 才继续.
-        running_tasks = client.keys("default*")
+        running_tasks = redis_client_pm.keys("default*")
         if len(running_tasks) > 1:
             message = "has other different task is running:%s" % running_tasks
             ret = {
