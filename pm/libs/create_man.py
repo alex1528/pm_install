@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
-""" 手动装机工具,适合没有控制卡的机器安装,需要机房帮忙重启进入PXE模式
-    这里采用ks的default文件来默认安装,所以可以同时装很多批同一type的机器;
-    不能同时装不同type的机器,此点需要知晓.
+""" 手动装机工具, 适合没有控制卡的机器安装, 需要机房帮忙重启进入PXE模式
+    这里采用 ks 的 default 文件来默认安装, 所以可以同时装很多批同一 
+    type 的机器;
+
+    不能同时安装不同 type 和 version 的机器, 如果安装, 请求会退出.
     
 """
 
@@ -34,17 +36,17 @@ def multi(install_lists, task_id):
     _type = install_lists[0]["type"]
     version = install_lists[0]["version"]
 
+    # 因为手动安装是使用一个默认的配置文件, 如果多组机器同时安装, 配置文件需要在
+    # 所有的机器都安装完成之后删除, 所以用一个队列来保存正在安装的任务.
+    default_key = "default:%s:%s" % (_type, version)
+    client.lpush(default_key, "")
+
     # 拷贝默认配置文件.
     # 不能同时安装两种类型的机器;
     # 而且还只能是一个版本.
     cmd = r"sudo /bin/cp -f %s /var/lib/tftpboot/pxelinux.cfg/default" % \
         PXELINUX_CFGS[_type][version]
     rc, so, se = utils.shell(cmd)
-
-    # 因为手动安装是使用一个默认的配置文件, 如果多组机器同时安装, 配置文件需要在
-    # 所有的机器都安装完成之后删除, 所以用一个队列来保存正在安装的任务.
-    default_key = "default:%s" % _type
-    client.lpush(default_key, "")
 
     # 执行安装任务.
     pool = ThreadPool(MAX_THREAD_NUM)

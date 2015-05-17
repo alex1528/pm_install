@@ -120,62 +120,61 @@ class CreateHandler(tornado.web.RequestHandler):
             }
             self.write(json.dumps(ret))
             return
-        else:
-            install_lists = list()
 
-            lines = text.split("\n")
-            for line in lines:
-                sn = line.split()[0]
-                cabinet = line.split()[1]
+        install_lists = list()
+        lines = text.split("\n")
+        for line in lines:
+            sn = line.split()[0]
+            cabinet = line.split()[1]
 
-                item = {
-                    "idc": idc, 
-                    "type": _type,
-                    "version": version,                    
-                    "usage": usage, 
-                    "product": product, 
-                    "device": device, 
-                    "sn": sn, 
-                    "cabinet": cabinet,
-                    "user_data": user_data
+            item = {
+                "idc": idc, 
+                "type": _type,
+                "version": version,                    
+                "usage": usage, 
+                "product": product, 
+                "device": device, 
+                "sn": sn, 
+                "cabinet": cabinet,
+                "user_data": user_data
+            }
+            install_lists.append(item)
+
+        # 是否强制安装.
+        inasset_lists = list()
+        if (force == False or force == "False"):
+            for item in install_lists:
+                sn = item["sn"]
+                if server.get("sn", sn, "hostname"):
+                    inasset_lists.append(sn)
+            if inasset_lists != []:
+                message = "servers have in asset, can't install:{0}".format(
+                    inasset_lists)
+                ret = {
+                    "status": "failed", 
+                    "message": message
                 }
-                install_lists.append(item)
+                self.write(json.dumps(ret))
+                return
 
-            # 是否强制安装.
-            inasset_lists = list()
-            if (force == False or force == "False"):
-                for item in install_lists:
-                    sn = item["sn"]
-                    if server.get("sn", sn, "hostname"):
-                        inasset_lists.append(sn)
-                if inasset_lists != []:
-                    message = "servers have in asset, can't install:{0}".format(
-                        inasset_lists)
-                    ret = {
-                        "status": "failed", 
-                        "message": message
-                    }
-                    self.write(json.dumps(ret))
-                    return
+        # 生成创建任务 id.
+        task_key = "physical:create"
+        task_id = "%s:%s" % (task_key, global_id.get())
 
-            # 生成创建任务 id.
-            task_key = "physical:create"
-            task_id = "%s:%s" % (task_key, global_id.get())
+        queue_dict = {
+            "install_lists": install_lists, 
+            "task_id": task_id,
+            "email": email
+        }
+        redis_client_pm.lpush("queue:auto", queue_dict)
 
-            queue_dict = {
-                "install_lists": install_lists, 
-                "task_id": task_id,
-                "email": email
-            }
-            redis_client_pm.lpush("queue:auto", queue_dict)
-
-            _url = "http://nsstack.hy01.nosa.me/api/v1/pm/tasks/%s" % task_id
-            ret = {
-                "status": "creating", 
-                "message": _url
-            }
-            self.write(json.dumps(ret))
-            return
+        _url = "http://nsstack.hy01.nosa.me/api/v1/pm/tasks/%s" % task_id
+        ret = {
+            "status": "creating", 
+            "message": _url
+        }
+        self.write(json.dumps(ret))
+        return
 
 
 class CreateManHandler(tornado.web.RequestHandler):
@@ -210,44 +209,54 @@ class CreateManHandler(tornado.web.RequestHandler):
             }
             self.write(json.dumps(ret))
             return
-        else:
-            install_lists = list()
+        
+        install_lists = list()
+        lines = text.split("\n")
+        for line in lines:
+            sn = line.split()[0]
+            cabinet = line.split()[1]
 
-            lines = text.split("\n")
-            for line in lines:
-                sn = line.split()[0]
-                cabinet = line.split()[1]
-
-                item = {
-                    "idc": idc, 
-                    "type": _type, 
-                    "version": version,
-                    "usage": usage, 
-                    "product": product, 
-                    "sn": sn, 
-                    "cabinet": cabinet,
-                    "user_data": user_data
-                }
-                install_lists.append(item)
-
-            # 生成创建任务 id.
-            task_key = "physical:create_man"
-            task_id = "%s:%s" % (task_key, global_id.get())
-
-            queue_dict = {
-                "install_lists": install_lists, 
-                "task_id": task_id,
-                "email": email
+            item = {
+                "idc": idc, 
+                "type": _type, 
+                "version": version,
+                "usage": usage, 
+                "product": product, 
+                "sn": sn, 
+                "cabinet": cabinet,
+                "user_data": user_data
             }
-            redis_client_pm.lpush("queue:man", queue_dict)
-
-            _url = "http://nsstack.hy01.nosa.me/api/v1/pm/tasks/%s" % task_id
+            install_lists.append(item)
+    
+        # 首先检查是否有其他 _type 和 version 的机器正在安装, 如果有,
+        # 退出; 如果没有, 才继续.
+        running_tasks = client.keys("default*")
+        if len(running_tasks) > 1:
+            message = "has other different task is running:%s" % running_tasks
             ret = {
-                "status": "creating", 
-                "message": _url
+                "status": "failed", 
+                "message": message
             }
             self.write(json.dumps(ret))
             return
+
+        # 生成创建任务 id.
+        task_key = "physical:create_man"
+        task_id = "%s:%s" % (task_key, global_id.get())
+
+        queue_dict = {
+            "install_lists": install_lists, 
+            "task_id": task_id,
+            "email": email
+        }
+        redis_client_pm.lpush("queue:man", queue_dict)
+
+        _url = "http://nsstack.hy01.nosa.me/api/v1/pm/tasks/%s" % task_id
+        ret = {
+            "status": "creating", 
+            "message": _url
+        }
+        self.write(json.dumps(ret))
 
 
 class MessageHandler(tornado.web.RequestHandler):
