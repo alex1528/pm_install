@@ -8,9 +8,10 @@
 
 import time
 import random
+from multiprocessing.dummy import Pool as ThreadPool
+
 import ujson as json
 import requests
-from multiprocessing.dummy import Pool as ThreadPool
 
 from web.const import MAX_THREAD_NUM, REDIS_DB_PM
 from libs import redisoj

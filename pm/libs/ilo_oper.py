@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 
-import pexpect
 import time
 import re
+
+import pexpect
 
 from web.const import PXELINUX_CFGS
 from libs import log, utils

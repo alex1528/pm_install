@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 
-import pexpect
-import sys
 import os
+import sys
+
+import pexpect
 
 from libs import utils
 from web.const import ILO_PASSWDS
@@ -17,7 +18,7 @@ def ip(idc, sn):
     if rc != 0:
         return False
 
-    return so.strip().split("\n")[-1].split(":")[-1].strip()
+    return so.strip().splitlines()[-1].split(":")[-1].strip()
 
 
 def passwd(idc, ip, sn):

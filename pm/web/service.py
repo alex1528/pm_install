@@ -27,52 +27,44 @@ class CheckHandler(tornado.web.RequestHandler):
         4). 是否能够设置启动顺序.
 
         """
-        idc = self.get_argument("idc", None)
-        device = self.get_argument("device", None)
-        text = self.get_argument("text", None)
-        email = self.get_argument("email", None)
+        idc = self.get_argument("idc")
+        device = self.get_argument("device")
+        text = self.get_argument("text")
+        email = self.get_argument("email")
 
-        if None in [idc, device, text]:
-            ret = {
-                "status": "failed", 
-                "message": "you must assign idc, device, text."
+        check_lists = list()
+
+        lines = text.split("\n")
+        for line in lines:
+            sn = line.split()[0]
+            cabinet = line.split()[1]
+
+            item = {
+                "idc": idc, 
+                "device": device, 
+                "sn": sn, 
+                "cabinet": cabinet
             }
-            self.write(json.dumps(ret))
-            return
-        else:
-            check_lists = list()
+            check_lists.append(item)
 
-            lines = text.split("\n")
-            for line in lines:
-                sn = line.split()[0]
-                cabinet = line.split()[1]
+        # 生成创建任务 id.
+        task_key = "physical:check"
+        task_id = "%s:%s" % (task_key, global_id.get())
 
-                item = {
-                    "idc": idc, 
-                    "device": device, 
-                    "sn": sn, 
-                    "cabinet": cabinet
-                }
-                check_lists.append(item)
+        queue_dict = {
+            "check_lists": check_lists, 
+            "task_id": task_id,
+            "email": email
+        }
+        redis_client_pm.lpush("queue:check", queue_dict)
 
-            # 生成创建任务 id.
-            task_key = "physical:check"
-            task_id = "%s:%s" % (task_key, global_id.get())
-
-            queue_dict = {
-                "check_lists": check_lists, 
-                "task_id": task_id,
-                "email": email
-            }
-            redis_client_pm.lpush("queue:check", queue_dict)
-
-            _url = "http://nsstack.hy01.nosa.me/api/v1/pm/tasks/%s" % task_id
-            ret = {
-                "status": "checking", 
-                "message": _url
-            }
-            self.write(json.dumps(ret))
-            return
+        _url = "http://nsstack.hy01.nosa.me/api/v1/pm/tasks/%s" % task_id
+        ret = {
+            "status": "checking", 
+            "message": _url
+        }
+        self.write(json.dumps(ret))
+        return
 
 
 class CreateHandler(tornado.web.RequestHandler):
@@ -99,27 +91,16 @@ class CreateHandler(tornado.web.RequestHandler):
         centos6.3, centos7.0
 
         """
-        idc = self.get_argument("idc", None)
-        _type = self.get_argument("type", None)
+        idc = self.get_argument("idc")
+        _type = self.get_argument("type")
         version = self.get_argument("version", "centos6.3")
-        usage = self.get_argument("usage", None)
-        product = self.get_argument("product", None)
-        device = self.get_argument("device", None)
-        force = self.get_argument("force", None)
-        text = self.get_argument("text", None)
+        usage = self.get_argument("usage")
+        product = self.get_argument("product")
+        device = self.get_argument("device", "em2")
+        force = self.get_argument("force", False)
+        text = self.get_argument("text")
         user_data = self.get_argument("user_data", None)        
         email = self.get_argument("email", None)
-
-        if None in [idc, _type, version, usage, product, device, \
-            force, text]:
-            message = "you must assign idc, type, version, "\
-                "usage, product, device, force, text."
-            ret = {
-                "status": "failed", 
-                "message": message
-            }
-            self.write(json.dumps(ret))
-            return
 
         install_lists = list()
         lines = text.split("\n")
@@ -191,25 +172,15 @@ class CreateManHandler(tornado.web.RequestHandler):
         5). 在资产系统里设置 product 和 cabinet 等.
 
         """  
-        idc = self.get_argument("idc", None)
-        _type = self.get_argument("type", None)
+        idc = self.get_argument("idc")
+        _type = self.get_argument("type")
         version = self.get_argument("version", "centos6.3") 
-        usage = self.get_argument("usage", None)
-        product = self.get_argument("product", None)
-        text = self.get_argument("text", None)
+        usage = self.get_argument("usage")
+        product = self.get_argument("product")
+        text = self.get_argument("text")
         user_data = self.get_argument("user_data", None)                
         email = self.get_argument("email", None)
 
-        if None in [idc, _type, version, usage, product, text]:
-            message = "you must assign idc, _type, version, "\
-                "usage, product, text."
-            ret = {
-                "status": "failed", 
-                "message": message
-            }
-            self.write(json.dumps(ret))
-            return
-        
         install_lists = list()
         lines = text.split("\n")
         for line in lines:
@@ -265,26 +236,11 @@ class MessageHandler(tornado.web.RequestHandler):
         """ 装机%post 阶段脚本来请求 sn 的 usage 以申请 hostname.
 
         """
-        sn = self.get_argument("sn", None)
-        if sn is None:
-            ret = {
-                "status": "failed", 
-                "message": "please assign sn."
-            }
-            self.write(json.dumps(ret))
-            return
-
-        message = tmessage.query(sn)
-        if message == False:
-            ret = {
-                "status": "failed", 
-                "message": "failed."
-            }
-        else:
-            ret = {
-                "status": "success", 
-                "message": message
-            }
+        sn = self.get_argument("sn")
+        ret = {
+            "status": "success",
+            "message": tmessage.query(sn)
+        }
         self.write(json.dumps(ret))
         return
 
@@ -293,17 +249,9 @@ class MessageHandler(tornado.web.RequestHandler):
         """ 机器申请 hostname 和 ip 后传回本系统.
 
         """        
-        sn = self.get_argument("sn", None)
-        hostname = self.get_argument("hostname", None)
-        ip = self.get_argument("ip", None)
-
-        if sn is None or hostname is None or ip is None:
-            ret = {
-                "status": "failed", 
-                "message": "please assign sn, hostname, ip."
-            }
-            self.write(json.dumps(ret))
-            return
+        sn = self.get_argument("sn")
+        hostname = self.get_argument("hostname")
+        ip = self.get_argument("ip")
 
         if tmessage.setup(sn, hostname, ip):
             ret = {
