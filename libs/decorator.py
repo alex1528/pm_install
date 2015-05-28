@@ -13,7 +13,7 @@ def authenticate_decorator(func):
                     "You have to login with your nosa.me account...")
                 return
             else:
-                apply(func, args, kwargs)
+                return func(*args, **kwargs)
         else:
             self.redirect("/login")
 
