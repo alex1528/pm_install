@@ -59,7 +59,10 @@ def get(mylist):
 
     for _dict in mylist:
         for key in _list:
-            context += "%s     " % _dict[key]
+            try:
+                context += "%s     " % _dict[key]
+            except KeyError as e:
+                context += "%s     " % e
         context += "<br/>"
 
     return context
