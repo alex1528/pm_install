@@ -43,20 +43,20 @@ ILO_PASSWDS = ['calvin']
 
 # 系统类型和系统版本号.
 OS_TYPES = ['kvm', 'raw', 'docker']
-OS_VERSIONS = ['centos6.3', 'centos7.0']
+OS_VERSIONS = ['centos6', 'centos7']
 
 # 系统类型和系统版本号 分别对应的 pxelinux.cfg 文件路径.
 PXELINUX_CFGS = {
     "raw": {
-        "centos6.3": "/home/work/pxe/pxelinux.cfg/centos_6.3_x64_raw_clean",
-        "centos7.0": "/home/work/pxe/pxelinux.cfg/centos_7.0_raw_clean"
+        "centos6": "/home/work/pxe/pxelinux.cfg/centos6_x64_raw_clean",
+        "centos7": "/home/work/pxe/pxelinux.cfg/centos7_raw_clean"
     },
     "kvm": {
-        "centos6.3": "/home/work/pxe/pxelinux.cfg/centos_6.3_x64_kvm_host",
-        "centos7.0": "/home/work/pxe/pxelinux.cfg/centos_7.0_kvm_host"
+        "centos6": "/home/work/pxe/pxelinux.cfg/centos6_x64_kvm_host",
+        "centos7": "/home/work/pxe/pxelinux.cfg/centos7_kvm_host"
     },
     "docker": {
-        "centos7.0": "/home/work/pxe/pxelinux.cfg/centos_7.0_docker_host"
+        "centos7": "/home/work/pxe/pxelinux.cfg/centos7_docker_host"
     }
 }
 

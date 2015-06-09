@@ -89,12 +89,12 @@ class CreateHandler(tornado.web.RequestHandler):
         raw, kvm, docker;
 
         version 表示支持的操作系统版本, 目前有:
-        centos6.3, centos7.0
+        centos6, centos7
 
         """
         idc = self.get_argument("idc")
         _type = self.get_argument("type")
-        version = self.get_argument("version", "centos6.3")
+        version = self.get_argument("version", "centos6")
         usage = self.get_argument("usage")
         product = self.get_argument("product")
         device = self.get_argument("device", "em2")
@@ -175,7 +175,7 @@ class CreateManHandler(tornado.web.RequestHandler):
         """  
         idc = self.get_argument("idc")
         _type = self.get_argument("type")
-        version = self.get_argument("version", "centos6.3") 
+        version = self.get_argument("version", "centos6") 
         usage = self.get_argument("usage")
         product = self.get_argument("product")
         text = self.get_argument("text")
