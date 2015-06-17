@@ -62,3 +62,6 @@ PXELINUX_CFGS = {
 
 # 装机并发数, 一个任务最多支持的同时装机数量.
 MAX_THREAD_NUM = 10
+
+# 查看任务执行结果的基础 url.
+PM_TASK_BASE_URL = "http://nostack.nosa.me/api/v1/pm/tasks"

@@ -9,7 +9,7 @@ import ujson as json
 import tornado.web
 
 from libs import decorator, ldapauth, redisoj, server
-from web.const import REDIS_DB_PM
+from web.const import REDIS_DB_PM, PM_TASK_BASE_URL
 from pm.libs import global_id, check, create, create_man, tmessage
 
 
@@ -59,7 +59,7 @@ class CheckHandler(tornado.web.RequestHandler):
         }
         redis_client_pm.lpush("queue:check", queue_dict)
 
-        _url = "http://nsstack.hy01.nosa.me/api/v1/pm/tasks/%s" % task_id
+        _url = "%s/%s" % (PM_TASK_BASE_URL, task_id)
         ret = {
             "status": "checking", 
             "message": _url
@@ -150,7 +150,7 @@ class CreateHandler(tornado.web.RequestHandler):
         }
         redis_client_pm.lpush("queue:create", queue_dict)
 
-        _url = "http://nsstack.hy01.nosa.me/api/v1/pm/tasks/%s" % task_id
+        _url = "%s/%s" % (PM_TASK_BASE_URL, task_id)
         ret = {
             "status": "creating", 
             "message": _url
@@ -223,7 +223,7 @@ class CreateManHandler(tornado.web.RequestHandler):
         }
         redis_client_pm.lpush("queue:create_man", queue_dict)
 
-        _url = "http://nsstack.hy01.nosa.me/api/v1/pm/tasks/%s" % task_id
+        _url = "%s/%s" % (PM_TASK_BASE_URL, task_id)
         ret = {
             "status": "creating", 
             "message": _url
