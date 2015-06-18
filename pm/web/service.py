@@ -28,23 +28,17 @@ class CheckHandler(tornado.web.RequestHandler):
         4). 是否能够设置启动顺序.
 
         """
-        idc = self.get_argument("idc")
-        device = self.get_argument("device")
-        text = self.get_argument("text")
-        email = self.get_argument("email")
+        idc = _get_argument_json(self, "idc", False, loads=True)
+        device = _get_argument_json(self, "device", False, loads=True)
+        sns = _get_argument_json(self, "sns", False, loads=True)
+        email = _get_argument_json(self, "email", True, None, loads=True)
 
         check_lists = list()
-
-        lines = text.split("\n")
-        for line in lines:
-            sn = line.split()[0]
-            cabinet = line.split()[1]
-
+        for i in sns:
             item = {
                 "idc": idc, 
                 "device": device, 
-                "sn": sn, 
-                "cabinet": cabinet
+                "sn": i["sn"]
             }
             check_lists.append(item)
 
@@ -65,7 +59,6 @@ class CheckHandler(tornado.web.RequestHandler):
             "message": _url
         }
         self.write(json.dumps(ret))
-        return
 
 
 class CreateHandler(tornado.web.RequestHandler):
@@ -92,23 +85,19 @@ class CreateHandler(tornado.web.RequestHandler):
         centos6, centos7
 
         """
-        idc = self.get_argument("idc")
-        _type = self.get_argument("type")
-        version = self.get_argument("version", "centos6")
-        usage = self.get_argument("usage")
-        product = self.get_argument("product")
-        device = self.get_argument("device", "em2")
-        force = self.get_argument("force", False)
-        text = self.get_argument("text")
-        user_data = self.get_argument("user_data", None)        
-        email = self.get_argument("email", None)
+        idc = _get_argument_json(self, "idc", False, loads=True)
+        _type = _get_argument_json(self, "type", False, loads=True)
+        version = _get_argument_json(self, "version", True, "centos6", loads=True)
+        usage = _get_argument_json(self, "usage", False, loads=True)
+        product = _get_argument_json(self, "product", False, loads=True)
+        device = _get_argument_json(self, "device", False, loads=True)
+        force = _get_argument_json(self, "force", True, False, loads=True)
+        sns = _get_argument_json(self, "sns", False, loads=True)
+        user_data = _get_argument_json(self, "user_data", True, None, loads=True)
+        email = _get_argument_json(self, "email", True, None, loads=True)
 
         install_lists = list()
-        lines = text.split("\n")
-        for line in lines:
-            sn = line.split()[0]
-            cabinet = line.split()[1]
-
+        for i in sns:
             item = {
                 "idc": idc, 
                 "type": _type,
@@ -116,15 +105,15 @@ class CreateHandler(tornado.web.RequestHandler):
                 "usage": usage, 
                 "product": product, 
                 "device": device, 
-                "sn": sn, 
-                "cabinet": cabinet,
+                "sn": i["sn"], 
+                "cabinet": i["cabinet"],
                 "user_data": user_data
             }
             install_lists.append(item)
 
         # 是否强制安装.
         inasset_lists = list()
-        if (force == False or force == "False"):
+        if force != True:
             for item in install_lists:
                 sn = item["sn"]
                 if server.get("sn", sn, "hostname"):
@@ -137,7 +126,7 @@ class CreateHandler(tornado.web.RequestHandler):
                     "message": message
                 }
                 self.write(json.dumps(ret))
-                return
+                self.finish()
 
         # 生成创建任务 id.
         task_key = "physical:create"
@@ -156,7 +145,6 @@ class CreateHandler(tornado.web.RequestHandler):
             "message": _url
         }
         self.write(json.dumps(ret))
-        return
 
 
 class CreateManHandler(tornado.web.RequestHandler):
@@ -173,33 +161,29 @@ class CreateManHandler(tornado.web.RequestHandler):
         5). 在资产系统里设置 product 和 cabinet 等.
 
         """  
-        idc = self.get_argument("idc")
-        _type = self.get_argument("type")
-        version = self.get_argument("version", "centos6") 
-        usage = self.get_argument("usage")
-        product = self.get_argument("product")
-        text = self.get_argument("text")
-        user_data = self.get_argument("user_data", None)                
-        email = self.get_argument("email", None)
+        idc = _get_argument_json(self, "idc", False, loads=True)
+        _type = _get_argument_json(self, "type", False, loads=True)
+        version = _get_argument_json(self, "version", True, "centos6", loads=True)
+        usage = _get_argument_json(self, "usage", False, loads=True)
+        product = _get_argument_json(self, "product", False, loads=True)
+        sns = _get_argument_json(self, "sns", False, loads=True)
+        user_data = _get_argument_json(self, "user_data", True, None, loads=True)       
+        email = _get_argument_json(self, "email", True, None, loads=True)
 
         install_lists = list()
-        lines = text.split("\n")
-        for line in lines:
-            sn = line.split()[0]
-            cabinet = line.split()[1]
-
+        for i in sns:
             item = {
                 "idc": idc, 
                 "type": _type, 
                 "version": version,
                 "usage": usage, 
                 "product": product, 
-                "sn": sn, 
-                "cabinet": cabinet,
+                "sn": i["sn"], 
+                "cabinet": i["cabinet"],
                 "user_data": user_data
             }
             install_lists.append(item)
-    
+
         # 首先检查是否有其他 _type 和 version 的机器正在安装, 如果有,
         # 退出; 如果没有, 才继续.
         running_tasks = redis_client_pm.keys("default*")
@@ -210,7 +194,7 @@ class CreateManHandler(tornado.web.RequestHandler):
                 "message": message
             }
             self.write(json.dumps(ret))
-            return
+            self.finish()
 
         # 生成创建任务 id.
         task_key = "physical:create_man"
@@ -243,7 +227,6 @@ class MessageHandler(tornado.web.RequestHandler):
             "message": tmessage.query(sn)
         }
         self.write(json.dumps(ret))
-        return
 
     @decorator.authenticate_decorator
     def post(self):
@@ -279,3 +262,16 @@ class TasksHandler(tornado.web.RequestHandler):
             except Exception, e:
                 _ret[i] = ret[i]
         self.write(json.dumps(_ret))
+
+
+def _get_argument_json(oj, arg, has_default=False, default=None, loads=True):
+    """ 获取参数.
+
+    """
+    if has_default:
+        value = getattr(oj, "get_argument")(arg, default)
+    else:
+        value = getattr(oj, "get_argument")(arg)
+    if value != default and loads:
+        return json.loads(value)
+    return value
